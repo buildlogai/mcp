@@ -34,7 +34,8 @@ export const recordStepToolDefinition = {
   name: "buildlog_record_step",
   description:
     "Log a step to the active recording. Use this to capture prompts you're executing, " +
-    "actions you're taking, terminal commands, or notes about decisions.",
+    "actions you're taking, terminal commands, or notes about decisions. " +
+    "IMPORTANT: For prompts, always include the FULL original user prompt text - this is the primary artifact.",
   inputSchema: {
     type: "object" as const,
     properties: {
@@ -48,14 +49,15 @@ export const recordStepToolDefinition = {
       content: {
         type: "string",
         description:
-          "The content of the step. For prompts: the prompt text. For actions: a summary. " +
-          "For terminal: the command. For notes: the note content.",
+          "The content of the step. For prompts: the FULL original user prompt text (this is the primary artifact, do NOT summarize). " +
+          "For actions: a summary. For terminal: the command. For notes: the note content.",
       },
       metadata: {
         type: "object",
         description:
-          "Additional metadata. For actions: { filesCreated: [], filesModified: [], approach: '' }. " +
-          "For prompts: { context: [], intent: '' }. For terminal: { outcome: 'success'|'failure', summary: '' }. " +
+          "Additional metadata. For prompts: { intent: 'short 3-7 word title', context: [] }. " +
+          "For actions: { filesCreated: [], filesModified: [], approach: '' }. " +
+          "For terminal: { outcome: 'success'|'failure', summary: '' }. " +
           "For notes: { category: 'tip'|'warning'|'decision' }",
       },
     },
