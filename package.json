@@ -1,0 +1,47 @@
+{
+  "name": "@buildlogai/mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Buildlog - search, follow, and record AI coding workflows",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "buildlog-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "buildlog",
+    "ai",
+    "coding",
+    "workflow",
+    "model-context-protocol"
+  ],
+  "author": "buildlog",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildlog/mcp"
+  },
+  "homepage": "https://buildlog.ai",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@buildlogai/types": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
