@@ -15,7 +15,26 @@ export interface RecordingStats {
  * Singleton manager for recording state
  */
 declare class RecordingManager {
+    private config;
     private state;
+    private _isAutoSession;
+    constructor();
+    /**
+     * Get whether auto-record is enabled
+     */
+    get autoRecordEnabled(): boolean;
+    /**
+     * Get whether current session is an auto-session
+     */
+    get isAutoSession(): boolean;
+    /**
+     * Start an automatic recording session
+     */
+    private startAutoSession;
+    /**
+     * Internal start method that handles the actual recording start
+     */
+    private startInternal;
     /**
      * Start a new recording session
      */

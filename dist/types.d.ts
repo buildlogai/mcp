@@ -72,6 +72,10 @@ export interface ForkParams {
     title: string;
     fromStep?: number;
 }
+export interface SuggestParams {
+    taskDescription: string;
+    contextFiles?: string[];
+}
 export interface FollowPrompt {
     step: number;
     prompt: string;

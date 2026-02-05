@@ -23,6 +23,8 @@ import {
 } from "./tools/record";
 import { uploadToolDefinition, handleUpload } from "./tools/upload";
 import { forkToolDefinition, handleFork } from "./tools/fork";
+import { autoStatusToolDefinition, handleAutoStatus } from "./tools/auto";
+import { suggestToolDefinition, handleSuggest } from "./tools/suggest";
 
 // Types
 import {
@@ -34,6 +36,7 @@ import {
   RecordStopParams,
   UploadParams,
   ForkParams,
+  SuggestParams,
 } from "./types";
 
 /**
@@ -57,12 +60,14 @@ export function createServer(): Server {
     return {
       tools: [
         searchToolDefinition,
+        suggestToolDefinition,
         getToolDefinition,
         getStepsToolDefinition,
         followToolDefinition,
         recordStartToolDefinition,
         recordStepToolDefinition,
         recordStopToolDefinition,
+        autoStatusToolDefinition,
         uploadToolDefinition,
         forkToolDefinition,
       ],
@@ -111,6 +116,14 @@ export function createServer(): Server {
 
         case "buildlog_fork":
           result = await handleFork(args as unknown as ForkParams);
+          break;
+
+        case "buildlog_auto_status":
+          result = await handleAutoStatus();
+          break;
+
+        case "buildlog_suggest":
+          result = await handleSuggest(args as unknown as SuggestParams);
           break;
 
         default:

@@ -5,7 +5,7 @@ MCP server for Buildlog - search, follow, and record AI coding workflows.
 This server gives AI agents direct access to the buildlog ecosystem, enabling them to:
 - **Search** for relevant workflows before starting a task
 - **Follow** proven buildlog recipes in their current context
-- **Record** their own sessions as they work
+- **Record** their own sessions as they work (auto-record by default!)
 - **Upload** completed buildlogs for others to learn from
 
 ## Installation
@@ -21,6 +21,37 @@ Set your API key for uploads (optional for search/follow, required for upload):
 ```bash
 export BUILDLOG_API_KEY=your-api-key
 ```
+
+## Auto-Recording
+
+By default, the MCP server starts recording automatically when loaded. This ensures no workflow is lost.
+
+To disable auto-recording:
+```bash
+export BUILDLOG_AUTO_RECORD=false
+```
+
+When a session ends with meaningful content (3+ steps), the server will suggest uploading.
+
+Use `buildlog_auto_status` to check if auto-recording is active.
+
+## Proactive Suggestions
+
+Before starting a complex task, use `buildlog_suggest`:
+
+```
+Use buildlog_suggest with taskDescription "Add Stripe subscription checkout to Next.js app"
+```
+
+The server will search for relevant workflows and recommend the best matches.
+
+## Source Attribution
+
+All buildlogs created via MCP include source metadata:
+- Tool name and version (`@buildlogai/mcp`)
+- Client application (if detectable via `MCP_CLIENT` env var)
+
+This helps track which tools contribute to the collective knowledge base.
 
 ## Usage
 
@@ -70,12 +101,14 @@ OpenClaw supports MCP servers natively:
 | Tool | Description |
 |------|-------------|
 | `buildlog_search` | Search buildlog.ai for relevant workflows |
+| `buildlog_suggest` | Get proactive workflow suggestions before starting a task |
 | `buildlog_get` | Fetch a specific buildlog by slug or URL |
 | `buildlog_get_steps` | Get just the steps from a buildlog |
 | `buildlog_follow` | Get prompts formatted for execution |
-| `buildlog_record_start` | Begin recording a session |
+| `buildlog_record_start` | Begin recording a session (or convert auto-session) |
 | `buildlog_record_step` | Log a step (prompt, action, terminal, note) |
 | `buildlog_record_stop` | End recording, get the buildlog |
+| `buildlog_auto_status` | Check auto-recording status and stats |
 | `buildlog_upload` | Upload to buildlog.ai |
 | `buildlog_fork` | Start recording from an existing buildlog |
 
@@ -91,6 +124,21 @@ Parameters:
 - language (optional): Filter by language (e.g., "typescript")
 - framework (optional): Filter by framework (e.g., "nextjs")
 - limit (optional): Max results (default: 10)
+```
+
+### buildlog_suggest
+
+Get proactive workflow suggestions before starting a task. Call this before starting complex work.
+
+```
+Parameters:
+- taskDescription (required): Description of what you're about to do
+- contextFiles (optional): Files relevant to the task (helps improve matching)
+
+Returns:
+- Ranked list of relevant workflows
+- Top recommendation with follow command
+- Extracted keywords that were matched
 ```
 
 ### buildlog_get
@@ -123,7 +171,7 @@ Parameters:
 
 ### buildlog_record_start
 
-Begin recording a new session.
+Begin recording a new session. If auto-recording is active, this converts the auto-session to a named session.
 
 ```
 Parameters:
@@ -150,6 +198,20 @@ End recording and return the buildlog.
 Parameters:
 - outcome (optional): "success" | "partial" | "failure"
 - summary (optional): Summary of what was accomplished
+```
+
+### buildlog_auto_status
+
+Check if auto-recording is active and get current session stats.
+
+```
+Parameters: none
+
+Returns:
+- autoRecordEnabled: Whether auto-record is on
+- isRecording: Whether currently recording
+- isAutoSession: Whether this is an auto-started session
+- stats: Step count, duration, prompt/action counts
 ```
 
 ### buildlog_upload
@@ -219,6 +281,8 @@ Agent: Use buildlog_upload
 |----------|-------------|
 | `BUILDLOG_API_KEY` | API key for uploads (get from buildlog.ai/settings) |
 | `BUILDLOG_API_URL` | Custom API URL (default: https://buildlog.ai/api) |
+| `BUILDLOG_AUTO_RECORD` | Set to "false" to disable auto-recording (default: true) |
+| `MCP_CLIENT` | Client name for source attribution (e.g., "Claude Desktop", "Cursor") |
 
 ## VS Code Extension Interop
 

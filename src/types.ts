@@ -110,6 +110,11 @@ export interface ForkParams {
   fromStep?: number;
 }
 
+export interface SuggestParams {
+  taskDescription: string;
+  contextFiles?: string[];
+}
+
 // =============================================================================
 // FOLLOW OUTPUT TYPES
 // =============================================================================

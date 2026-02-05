@@ -16,11 +16,22 @@ import {
   NoteStep,
 } from "@buildlogai/types";
 
+// Package version for source metadata
+const PACKAGE_VERSION = "1.1.0";
+
 /**
  * Generate a UUID v4
  */
 function generateId(): string {
   return crypto.randomUUID();
+}
+
+/**
+ * Recording configuration
+ */
+interface RecordingConfig {
+  autoRecord: boolean;
+  apiKey?: string;
 }
 
 /**
@@ -47,21 +58,53 @@ export interface RecordingStats {
  * Singleton manager for recording state
  */
 class RecordingManager {
+  private config: RecordingConfig;
   private state: RecordingState = {
     isRecording: false,
     buildlog: null,
     startTime: null,
     stepSequence: 0,
   };
+  private _isAutoSession: boolean = false;
+
+  constructor() {
+    this.config = {
+      autoRecord: process.env.BUILDLOG_AUTO_RECORD !== 'false', // Default ON
+      apiKey: process.env.BUILDLOG_API_KEY
+    };
+    
+    // If auto-record is enabled, start recording immediately
+    if (this.config.autoRecord) {
+      this.startAutoSession();
+    }
+  }
 
   /**
-   * Start a new recording session
+   * Get whether auto-record is enabled
    */
-  start(title: string, description?: string): void {
-    if (this.state.isRecording) {
-      throw new Error("A recording is already in progress. Stop it first.");
-    }
+  get autoRecordEnabled(): boolean {
+    return this.config.autoRecord;
+  }
 
+  /**
+   * Get whether current session is an auto-session
+   */
+  get isAutoSession(): boolean {
+    return this._isAutoSession;
+  }
+
+  /**
+   * Start an automatic recording session
+   */
+  private startAutoSession(): void {
+    this.startInternal('Auto-recorded session', 'Automatically captured workflow');
+    this._isAutoSession = true;
+  }
+
+  /**
+   * Internal start method that handles the actual recording start
+   */
+  private startInternal(title: string, description?: string): void {
     const now = new Date();
     
     this.state = {
@@ -80,6 +123,12 @@ class RecordingManager {
           editor: "other",
           aiProvider: "other",
           replicable: true,
+          // Source attribution
+          source: {
+            tool: '@buildlogai/mcp',
+            version: PACKAGE_VERSION,
+            client: process.env.MCP_CLIENT || 'unknown'
+          }
         },
         steps: [],
         outcome: {
@@ -91,6 +140,28 @@ class RecordingManager {
         },
       },
     };
+  }
+
+  /**
+   * Start a new recording session
+   */
+  start(title: string, description?: string): void {
+    // If auto-session is active, convert it to a named session
+    if (this._isAutoSession && this.state.isRecording && this.state.buildlog) {
+      this.state.buildlog.metadata.title = title;
+      if (description) {
+        this.state.buildlog.metadata.description = description;
+      }
+      this._isAutoSession = false;
+      return;
+    }
+
+    if (this.state.isRecording) {
+      throw new Error("A recording is already in progress. Stop it first.");
+    }
+
+    this.startInternal(title, description);
+    this._isAutoSession = false;
   }
 
   /**
@@ -184,6 +255,7 @@ class RecordingManager {
 
     const buildlog = this.state.buildlog;
     const duration = (Date.now() - this.state.startTime) / 1000;
+    const wasAutoSession = this._isAutoSession;
 
     // Update metadata
     buildlog.metadata.durationSeconds = Math.round(duration);
@@ -208,6 +280,11 @@ class RecordingManager {
       canReplicate: true,
     };
 
+    // If auto-session with meaningful content, suggest upload
+    if (wasAutoSession && buildlog.steps.length >= 3) {
+      (buildlog.metadata as any).suggestUpload = true;
+    }
+
     // Reset state
     this.state = {
       isRecording: false,
@@ -215,6 +292,7 @@ class RecordingManager {
       startTime: null,
       stepSequence: 0,
     };
+    this._isAutoSession = false;
 
     return buildlog;
   }
@@ -290,6 +368,12 @@ class RecordingManager {
           tags: buildlog.metadata.tags,
           replicable: true,
           dependencies: [buildlog.metadata.id],
+          // Source attribution
+          source: {
+            tool: '@buildlogai/mcp',
+            version: PACKAGE_VERSION,
+            client: process.env.MCP_CLIENT || 'unknown'
+          }
         },
         steps: inheritedSteps as BuildlogStep[],
         outcome: {
@@ -302,6 +386,7 @@ class RecordingManager {
       },
     };
 
+    this._isAutoSession = false;
     return inheritedSteps.length;
   }
 
